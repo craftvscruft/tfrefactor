@@ -1,4 +1,4 @@
-module github.com/craftvscruft/tf-rf
+module github.com/craftvscruft/tfrefactor
 
 go 1.17
 

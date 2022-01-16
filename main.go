@@ -1,6 +1,6 @@
 package main
 
-import "github.com/craftvscruft/tf-rf/cmd"
+import "github.com/craftvscruft/tfrefactor/cmd"
 
 func main() {
 	cmd.Execute()

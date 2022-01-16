@@ -7,7 +7,7 @@ import (
 
 // RootCmd is a top level command instance
 var rootCmd = &cobra.Command{
-	Use:           "tf-rf",
+	Use:           "tfrefactor",
 	Short:         "Automated refactoring for Terraform",
 	SilenceErrors: true,
 	SilenceUsage:  true,
