@@ -29,6 +29,13 @@ func (a *Address) RefName() string {
 	return strings.Join(a.RefNameArray(), ".")
 }
 
+func (a *Address) BlockType() string {
+	if a.elementType == Var {
+		return "variable"
+	}
+	return string(a.elementType)
+}
+
 func ParseAddress(addr string) *Address {
 	parts := strings.Split(addr, ".")
 	switch parts[0] {
@@ -44,7 +51,7 @@ func ParseAddress(addr string) *Address {
 		}
 	case string(Var), "vars", "variable", "variables":
 		return &Address{
-			elementType: Output,
+			elementType: Var,
 			labels:      parts[1:],
 		}
 	case string(Local), "locals":

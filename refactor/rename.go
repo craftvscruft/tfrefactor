@@ -12,7 +12,6 @@ func Rename(fromAddressString, toAddressString, configPath string) error {
 	configPattern := filepath.Join(configPath, "*.tf")
 	_, _ = fmt.Println(configPattern)
 	filenames, err := filepath.Glob(configPattern)
-	// _, _ = fmt.Printf("%s\n", filenames)
 	if err != nil {
 		return err
 	}
@@ -52,7 +51,7 @@ func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *
 	matchingBlocks := findBlocks(file.Body(), fromAddress)
 	for _, block := range matchingBlocks {
 		_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
-		block.SetType(string(toAddress.elementType))
+		block.SetType(string(toAddress.BlockType()))
 		block.SetLabels(toAddress.labels)
 	}
 	RenameVariablePrefixInBody(file.Body(), fromAddress, toAddress)
@@ -71,7 +70,7 @@ func RenameVariablePrefixInBody(body *hclwrite.Body, fromAddress, toAddress *Add
 func findBlocks(b *hclwrite.Body, address *Address) []*hclwrite.Block {
 	var matched []*hclwrite.Block
 	for _, block := range b.Blocks() {
-		if string(address.elementType) == block.Type() {
+		if string(address.BlockType()) == block.Type() {
 			if matchLabels(address.labels, block.Labels()) {
 				matched = append(matched, block)
 			}
