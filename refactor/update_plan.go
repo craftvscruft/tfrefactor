@@ -1,18 +1,18 @@
 package refactor
 
 type FileUpdate struct {
-	beforeText string
-	afterText  string
-	filename   string
+	Filename   string
+	BeforeText string
+	AfterText  string
 }
 
 type UpdatePlan struct {
-	fileUpdates []*FileUpdate
+	FileUpdates []*FileUpdate
 }
 
 func (p *UpdatePlan) addFileUpdate(fileUpdate *FileUpdate) {
-	p.fileUpdates = append(p.fileUpdates, fileUpdate)
+	p.FileUpdates = append(p.FileUpdates, fileUpdate)
 }
 func newUpdatePlan() UpdatePlan {
-	return UpdatePlan{fileUpdates: []*FileUpdate{}}
+	return UpdatePlan{FileUpdates: []*FileUpdate{}}
 }

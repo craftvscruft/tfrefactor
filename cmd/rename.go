@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -55,5 +56,33 @@ func runRenameCmd(cmd *cobra.Command, args []string) error {
 
 	CheckFatal(err)
 	_, err = fmt.Fprintf(cmd.OutOrStdout(), "Renaming '%v' -> '%v' in %v\n", fromAddress, toAddress, configPath)
-	return refactor.Rename(fromAddress, toAddress, configPath)
+	if err != nil {
+		return err
+	}
+	plan, err := refactor.Rename(fromAddress, toAddress, configPath)
+	if len(plan.FileUpdates) > 0 {
+		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Update %v file(s)? [y/N]: ", len(plan.FileUpdates))
+		CheckFatal(err)
+		var in string
+		_, err = fmt.Fscanf(cmd.InOrStdin(), "%s", &in)
+		CheckFatal(err)
+		if in == "Y" || in == "y" {
+			err = applyUpdate(plan)
+			CheckFatal(err)
+		} else {
+			_, err = fmt.Fprintf(cmd.OutOrStdout(), "\nAborted\n")
+			CheckFatal(err)
+		}
+	}
+	return err
+}
+
+func applyUpdate(plan *refactor.UpdatePlan) error {
+	for _, update := range plan.FileUpdates {
+		err := ioutil.WriteFile(update.Filename, []byte(update.AfterText), 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
