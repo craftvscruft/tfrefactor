@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/pmezard/go-difflib/difflib"
 )
@@ -47,12 +48,34 @@ func Rename(fromAddressString, toAddressString, configPath string) error {
 	return nil
 }
 
+func createTraversal(labels []string) (traversal hcl.Traversal) {
+	traversal = hcl.Traversal{
+		hcl.TraverseRoot{
+			Name: labels[0],
+		},
+	}
+	for _, label := range labels[1:] {
+		traversal = append(traversal, hcl.TraverseAttr{
+			Name: label,
+		})
+	}
+	return
+}
+
 func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
 	matchingBlocks := findBlocks(file.Body(), fromAddress)
 	for _, block := range matchingBlocks {
 		_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
 		block.SetType(string(toAddress.BlockType()))
 		block.SetLabels(toAddress.labels)
+		if fromAddress.elementType == Resource && toAddress.elementType == Resource {
+			file.Body().AppendNewline()
+			movedBlock := file.Body().AppendNewBlock("moved", []string{})
+
+			movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
+			movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+		}
+
 	}
 	RenameVariablePrefixInBody("", file.Body(), fromAddress, toAddress)
 	return nil

@@ -55,6 +55,11 @@ resource "a" "c" {
 
 b2 "l2" {
 }
+
+moved {
+  from = a.b
+  to   = a.c
+}
 `,
 		},
 		{
@@ -80,6 +85,11 @@ resource "aws_iam_policy" "read_only_restrictions2" {
 }
 
 b2 "l2" {
+}
+
+moved {
+  from = aws_iam_policy.read_only_restrictions
+  to   = aws_iam_policy.read_only_restrictions2
 }
 `,
 		},
@@ -171,6 +181,11 @@ resource "aws_instance" "b" {
 }
 moved {
   from = aws_instance.z
+  to   = aws_instance.b
+}
+
+moved {
+  from = aws_instance.a
   to   = aws_instance.b
 }
 `,
