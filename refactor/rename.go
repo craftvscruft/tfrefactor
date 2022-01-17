@@ -54,16 +54,18 @@ func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *
 		block.SetType(string(toAddress.BlockType()))
 		block.SetLabels(toAddress.labels)
 	}
-	RenameVariablePrefixInBody(file.Body(), fromAddress, toAddress)
+	RenameVariablePrefixInBody("", file.Body(), fromAddress, toAddress)
 	return nil
 }
 
-func RenameVariablePrefixInBody(body *hclwrite.Body, fromAddress, toAddress *Address) {
-	for _, attr := range body.Attributes() {
-		attr.Expr().RenameVariablePrefix(fromAddress.RefNameArray(), toAddress.RefNameArray())
+func RenameVariablePrefixInBody(blockType string, body *hclwrite.Body, fromAddress, toAddress *Address) {
+	for name, attr := range body.Attributes() {
+		if !(blockType == "moved" && name == "from") {
+			attr.Expr().RenameVariablePrefix(fromAddress.RefNameArray(), toAddress.RefNameArray())
+		}
 	}
 	for _, blk := range body.Blocks() {
-		RenameVariablePrefixInBody(blk.Body(), fromAddress, toAddress)
+		RenameVariablePrefixInBody(blk.Type(), blk.Body(), fromAddress, toAddress)
 	}
 }
 

@@ -151,6 +151,54 @@ b2 "l2" {
 }
 `,
 		},
+		{
+			name: "moved_block_change_to",
+			src: `
+resource "aws_instance" "a" {
+  a0 = "pre${var.a}"
+}
+moved {
+  from = aws_instance.z
+  to   = aws_instance.a
+}
+`,
+			from: "aws_instance.a",
+			to:   "aws_instance.b",
+			ok:   true,
+			want: `
+resource "aws_instance" "b" {
+  a0 = "pre${var.a}"
+}
+moved {
+  from = aws_instance.z
+  to   = aws_instance.b
+}
+`,
+		},
+		{
+			name: "moved_block_dont_change_from",
+			src: `
+resource "aws_instance" "a" {
+  a0 = "pre${var.a}"
+}
+moved {
+  from = aws_instance.z
+  to   = aws_instance.a
+}
+`,
+			from: "aws_instance.z",
+			to:   "aws_instance.y",
+			ok:   true,
+			want: `
+resource "aws_instance" "a" {
+  a0 = "pre${var.a}"
+}
+moved {
+  from = aws_instance.z
+  to   = aws_instance.a
+}
+`,
+		},
 	}
 
 	for _, tc := range cases {
