@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/pmezard/go-difflib/difflib"
+	"github.com/raymyers/hcl/v2"
+	"github.com/raymyers/hcl/v2/hclwrite"
 )
 
 func Rename(fromAddressString, toAddressString, configPath string) error {
@@ -63,21 +63,41 @@ func createTraversal(labels []string) (traversal hcl.Traversal) {
 }
 
 func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
-	matchingBlocks := findBlocks(file.Body(), fromAddress)
-	for _, block := range matchingBlocks {
-		_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
-		block.SetType(string(toAddress.BlockType()))
-		block.SetLabels(toAddress.labels)
-		if fromAddress.elementType == Resource && toAddress.elementType == Resource {
-			file.Body().AppendNewline()
-			movedBlock := file.Body().AppendNewBlock("moved", []string{})
-
-			movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
-			movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+	if fromAddress.elementType == TypeLocal {
+		if err := RenameLocalInFile(filename, file, fromAddress, toAddress); err != nil {
+			return err
 		}
+	} else {
+		matchingBlocks := findBlocks(file.Body(), fromAddress)
+		for _, block := range matchingBlocks {
+			_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
+			block.SetType(string(toAddress.BlockType()))
+			block.SetLabels(toAddress.labels)
+			if fromAddress.elementType == TypeResource && toAddress.elementType == TypeResource {
+				file.Body().AppendNewline()
+				movedBlock := file.Body().AppendNewBlock("moved", []string{})
 
+				movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
+				movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+			}
+		}
 	}
+
 	RenameVariablePrefixInBody("", file.Body(), fromAddress, toAddress)
+	return nil
+}
+
+func RenameLocalInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
+	fromName := fromAddress.labels[0]
+	toName := toAddress.labels[0]
+	for _, block := range file.Body().Blocks() {
+		if "locals" == block.Type() {
+			attr := block.Body().GetAttribute(fromName)
+			if attr != nil {
+				attr.SetName(toName)
+			}
+		}
+	}
 	return nil
 }
 

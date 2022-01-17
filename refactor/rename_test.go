@@ -140,6 +140,50 @@ b2 "l2" {
 `,
 		},
 		{
+			name: "local_in_interpolation",
+			src: `
+locals {
+  a = 1
+}
+
+b2 "l2" {
+  a0 = "pre${local.a}"
+}
+`,
+			from: "local.a",
+			to:   "local.b",
+			ok:   true,
+			want: `
+locals {
+  b = 1
+}
+
+b2 "l2" {
+  a0 = "pre${local.b}"
+}
+`,
+		},
+		{
+			name: "local_with_comments",
+			src: `
+locals {
+  // before
+  a = 1 // line
+  // after
+}
+`,
+			from: "local.a",
+			to:   "local.b",
+			ok:   true,
+			want: `
+locals {
+  // before
+  b = 1 // line
+  // after
+}
+`,
+		},
+		{
 			name: "var_in_interpolation",
 			src: `
 variable "a" {

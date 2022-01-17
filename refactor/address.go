@@ -2,24 +2,24 @@ package refactor
 
 import "strings"
 
-type ElementType string
+type TypeName string
 
 const (
-	Resource ElementType = "resource"
-	Output               = "output"
-	Var                  = "var"
-	Local                = "local"
-	Data                 = "data"
-	Module               = "module"
+	TypeResource TypeName = "resource"
+	TypeOutput            = "output"
+	TypeVar               = "var"
+	TypeLocal             = "local"
+	TypeData              = "data"
+	TypeModule            = "module"
 )
 
 type Address struct {
-	elementType ElementType
+	elementType TypeName
 	labels      []string
 }
 
 func (a *Address) RefNameArray() []string {
-	if a.elementType == Resource {
+	if a.elementType == TypeResource {
 		return a.labels
 	}
 	return append([]string{string(a.elementType)}, a.labels...)
@@ -30,7 +30,7 @@ func (a *Address) RefName() string {
 }
 
 func (a *Address) BlockType() string {
-	if a.elementType == Var {
+	if a.elementType == TypeVar {
 		return "variable"
 	}
 	return string(a.elementType)
@@ -39,39 +39,39 @@ func (a *Address) BlockType() string {
 func ParseAddress(addr string) *Address {
 	parts := strings.Split(addr, ".")
 	switch parts[0] {
-	case string(Resource), "resources":
+	case string(TypeResource), "resources":
 		return &Address{
-			elementType: Resource,
+			elementType: TypeResource,
 			labels:      parts[1:],
 		}
-	case string(Output), "outputs":
+	case string(TypeOutput), "outputs":
 		return &Address{
-			elementType: Output,
+			elementType: TypeOutput,
 			labels:      parts[1:],
 		}
-	case string(Var), "vars", "variable", "variables":
+	case string(TypeVar), "vars", "variable", "variables":
 		return &Address{
-			elementType: Var,
+			elementType: TypeVar,
 			labels:      parts[1:],
 		}
-	case string(Local), "locals":
+	case string(TypeLocal), "locals":
 		return &Address{
-			elementType: Local,
+			elementType: TypeLocal,
 			labels:      parts[1:],
 		}
-	case string(Data):
+	case string(TypeData):
 		return &Address{
-			elementType: Data,
+			elementType: TypeData,
 			labels:      parts[1:],
 		}
-	case string(Module):
+	case string(TypeModule):
 		return &Address{
-			elementType: Module,
+			elementType: TypeModule,
 			labels:      parts[1:],
 		}
 	default:
 		return &Address{
-			elementType: Resource,
+			elementType: TypeResource,
 			labels:      parts,
 		}
 	}

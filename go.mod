@@ -3,8 +3,8 @@ module github.com/craftvscruft/tfrefactor
 go 1.17
 
 require (
-	github.com/hashicorp/hcl/v2 v2.11.1
 	github.com/pmezard/go-difflib v1.0.0
+	github.com/raymyers/hcl/v2 v2.11.1-set-attr-name-fork
 	github.com/spf13/cobra v1.3.0
 )
 
