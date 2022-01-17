@@ -9,27 +9,28 @@ import (
 	"github.com/raymyers/hcl/v2/hclwrite"
 )
 
-func Rename(fromAddressString, toAddressString, configPath string) error {
+func Rename(fromAddressString, toAddressString, configPath string) (*UpdatePlan, error) {
 	configPattern := filepath.Join(configPath, "*.tf")
 	_, _ = fmt.Println(configPattern)
 	filenames, err := filepath.Glob(configPattern)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fromAddress := ParseAddress(fromAddressString)
 	toAddress := ParseAddress(toAddressString)
 	if len(fromAddress.RefNameArray()) != len(toAddress.RefNameArray()) {
-		return fmt.Errorf("Addresses are different lengths: '%v' and '%v'", fromAddress.RefName(), toAddress.RefName())
+		return nil, fmt.Errorf("Addresses are different lengths: '%v' and '%v'", fromAddress.RefName(), toAddress.RefName())
 	}
+	plan := newUpdatePlan()
 	for _, filename := range filenames {
 		parsedFile, err := ParseHclFile(filename)
 		beforeText := string(parsedFile.Bytes())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		err = RenameInFile(filename, parsedFile, fromAddress, toAddress)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		afterText := string(parsedFile.Bytes())
 		diff := difflib.UnifiedDiff{
@@ -42,10 +43,11 @@ func Rename(fromAddressString, toAddressString, configPath string) error {
 		diffText, _ := difflib.GetUnifiedDiffString(diff)
 		if len(diffText) > 0 {
 			fmt.Printf("Diff for %v\n%v\n", filename, diffText)
+			plan.addFileUpdate(&FileUpdate{filename, beforeText, afterText})
 		}
 
 	}
-	return nil
+	return &plan, nil
 }
 
 func createTraversal(labels []string) (traversal hcl.Traversal) {
