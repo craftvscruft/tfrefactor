@@ -1,15 +1,16 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 // RootCmd is a top level command instance
 var rootCmd = &cobra.Command{
 	Use:           "tfrefactor",
 	Short:         "Automated refactoring for Terraform",
-	SilenceErrors: true,
+	SilenceErrors: false,
 	SilenceUsage:  true,
 }
 

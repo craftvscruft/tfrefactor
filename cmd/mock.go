@@ -1,5 +1,7 @@
 package cmd
 
+// Adapted from hcledit by Masayuki Morita
+
 import (
 	"bytes"
 	"fmt"
