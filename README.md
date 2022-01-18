@@ -6,7 +6,7 @@
 [![License: MPL2](https://img.shields.io/github/license/raymyers/tfrefactor)](https://github.com/craftvscruft/tfrefactor/blob/main/LICENSE)
 [![Twitter: lambdapocalypse](https://img.shields.io/twitter/follow/lambdapocalypse.svg?style=social)](https://twitter.com/lambdapocalypse)
 
-> Automated refactoring for [Terraform](https://terraform.io/.
+> Automated refactoring for [Terraform](https://terraform.io/).
 
 ### 🏠 [Homepage](https://github.com/craftvscruft/tfrefactor)
 
