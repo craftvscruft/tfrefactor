@@ -7,8 +7,6 @@ jobs:
         go-version: [1.17.x]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    # Run windows build on main, not PR.
-    if: github.event_name == 'merge' || matrix.os != 'windows-latest'
     steps:
     - name: Cache
       uses: actions/cache@v2
