@@ -55,6 +55,11 @@ resource "a" "c" {
 
 b2 "l2" {
 }
+
+moved {
+  from = a.b
+  to   = a.c
+}
 `,
 		},
 		{
@@ -80,6 +85,11 @@ resource "aws_iam_policy" "read_only_restrictions2" {
 }
 
 b2 "l2" {
+}
+
+moved {
+  from = aws_iam_policy.read_only_restrictions
+  to   = aws_iam_policy.read_only_restrictions2
 }
 `,
 		},
@@ -130,6 +140,50 @@ b2 "l2" {
 `,
 		},
 		{
+			name: "local_in_interpolation",
+			src: `
+locals {
+  a = 1
+}
+
+b2 "l2" {
+  a0 = "pre${local.a}"
+}
+`,
+			from: "local.a",
+			to:   "local.b",
+			ok:   true,
+			want: `
+locals {
+  b = 1
+}
+
+b2 "l2" {
+  a0 = "pre${local.b}"
+}
+`,
+		},
+		{
+			name: "local_with_comments",
+			src: `
+locals {
+  // before
+  a = 1 // line
+  // after
+}
+`,
+			from: "local.a",
+			to:   "local.b",
+			ok:   true,
+			want: `
+locals {
+  // before
+  b = 1 // line
+  // after
+}
+`,
+		},
+		{
 			name: "var_in_interpolation",
 			src: `
 variable "a" {
@@ -171,6 +225,11 @@ resource "aws_instance" "b" {
 }
 moved {
   from = aws_instance.z
+  to   = aws_instance.b
+}
+
+moved {
+  from = aws_instance.a
   to   = aws_instance.b
 }
 `,

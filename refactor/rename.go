@@ -4,31 +4,33 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/pmezard/go-difflib/difflib"
+	"github.com/raymyers/hcl/v2"
+	"github.com/raymyers/hcl/v2/hclwrite"
 )
 
-func Rename(fromAddressString, toAddressString, configPath string) error {
+func Rename(fromAddressString, toAddressString, configPath string) (*UpdatePlan, error) {
 	configPattern := filepath.Join(configPath, "*.tf")
 	_, _ = fmt.Println(configPattern)
 	filenames, err := filepath.Glob(configPattern)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fromAddress := ParseAddress(fromAddressString)
 	toAddress := ParseAddress(toAddressString)
 	if len(fromAddress.RefNameArray()) != len(toAddress.RefNameArray()) {
-		return fmt.Errorf("Addresses are different lengths: '%v' and '%v'", fromAddress.RefName(), toAddress.RefName())
+		return nil, fmt.Errorf("Addresses are different lengths: '%v' and '%v'", fromAddress.RefName(), toAddress.RefName())
 	}
+	plan := newUpdatePlan()
 	for _, filename := range filenames {
 		parsedFile, err := ParseHclFile(filename)
 		beforeText := string(parsedFile.Bytes())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		err = RenameInFile(filename, parsedFile, fromAddress, toAddress)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		afterText := string(parsedFile.Bytes())
 		diff := difflib.UnifiedDiff{
@@ -41,20 +43,63 @@ func Rename(fromAddressString, toAddressString, configPath string) error {
 		diffText, _ := difflib.GetUnifiedDiffString(diff)
 		if len(diffText) > 0 {
 			fmt.Printf("Diff for %v\n%v\n", filename, diffText)
+			plan.addFileUpdate(&FileUpdate{filename, beforeText, afterText})
 		}
 
 	}
-	return nil
+	return &plan, nil
+}
+
+func createTraversal(labels []string) (traversal hcl.Traversal) {
+	traversal = hcl.Traversal{
+		hcl.TraverseRoot{
+			Name: labels[0],
+		},
+	}
+	for _, label := range labels[1:] {
+		traversal = append(traversal, hcl.TraverseAttr{
+			Name: label,
+		})
+	}
+	return
 }
 
 func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
-	matchingBlocks := findBlocks(file.Body(), fromAddress)
-	for _, block := range matchingBlocks {
-		_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
-		block.SetType(string(toAddress.BlockType()))
-		block.SetLabels(toAddress.labels)
+	if fromAddress.elementType == TypeLocal {
+		if err := RenameLocalInFile(filename, file, fromAddress, toAddress); err != nil {
+			return err
+		}
+	} else {
+		matchingBlocks := findBlocks(file.Body(), fromAddress)
+		for _, block := range matchingBlocks {
+			_, _ = fmt.Printf("Renaming %v %v in %v\n", block.Type(), block.Labels(), filename)
+			block.SetType(string(toAddress.BlockType()))
+			block.SetLabels(toAddress.labels)
+			if fromAddress.elementType == TypeResource && toAddress.elementType == TypeResource {
+				file.Body().AppendNewline()
+				movedBlock := file.Body().AppendNewBlock("moved", []string{})
+
+				movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
+				movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+			}
+		}
 	}
+
 	RenameVariablePrefixInBody("", file.Body(), fromAddress, toAddress)
+	return nil
+}
+
+func RenameLocalInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
+	fromName := fromAddress.labels[0]
+	toName := toAddress.labels[0]
+	for _, block := range file.Body().Blocks() {
+		if "locals" == block.Type() {
+			attr := block.Body().GetAttribute(fromName)
+			if attr != nil {
+				attr.SetName(toName)
+			}
+		}
+	}
 	return nil
 }
 
