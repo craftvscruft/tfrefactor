@@ -1,4 +1,8 @@
-on: [push, pull_request]
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
 name: Test
 jobs:
   test:
@@ -25,5 +29,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: Build
+      run: go build -v ./...
     - name: Test
-      run: go test ./...
+      run: go test -v ./...
