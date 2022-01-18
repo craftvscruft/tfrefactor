@@ -4,7 +4,7 @@
 ![Tests](https://github.com/craftvscruft/tfrefactor/actions/workflows/test.yml/badge.svg?branch=main)
 [![License: MPL2](https://img.shields.io/github/license/raymyers/tfrefactor)](https://github.com/craftvscruft/tfrefactor/blob/main/LICENSE)
 
-> Automated refactoring for [Terraform](https://terraform.io/.
+> Automated refactoring for [Terraform](https://terraform.io/).
 
 ### 🏠 [Homepage](https://github.com/craftvscruft/tfrefactor)
 
