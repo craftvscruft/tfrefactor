@@ -6,35 +6,46 @@
 
 > Automated refactoring for [Terraform](https://terraform.io/).
 
-### 🏠 [Homepage](https://github.com/craftvscruft/tfrefactor)
+Currently supports:
+
+* Rename local / var / data / resource across all files in a config
+* Diff preview of changes
+* Adding `moved` blocks for resource renames to avoid `state mv` in Terraform 1.1
+
+See [refactor.tf](https://refactor.tf/refactor/2021/08/26/todo.html) for more refactoring recipes.
 
 ## Install
 
 Requires [Go 1.17](https://go.dev/doc/install)
-
-Substitute ~/.local/bin for a prefered dir the is in your $PATH.
 
 ```sh
 git clone git@github.com:craftvscruft/tfrefactor.git
 cd tfrefactor
 make
 
+# Ensure ~/.local/bin is in your $PATH or copy to a directory that is.
 cp bin/tfrefactor ~/.local/bin
 ```
 
 ## Usage
 
+Rename a var from `acct_id` to `account_id` in the current directory
+```
+tfrefactor rename var.acct_id var.account_id
+```
+
+Display CLI help with usage information.
+
 ```sh
 tfrefactor
 ```
 
-Or without installing / during development
+You can also run without installing
 ```sh
 make
+
 ./bin/tfrefactor
 ```
-
-The CLI help will explain usage.
 
 ## Run tests
 
