@@ -1,10 +1,8 @@
 # tfrefactor
 ![Version](https://img.shields.io/badge/version-0.0.1-blue.svg?cacheSeconds=2592000)
-[![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg)](https://refactor.tf)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/kefranabg/readme-md-generator/graphs/commit-activity)
+[![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg)](https://github.com/craftvscruft/tfrefactor/blob/main/docs/cli/tfrefactor.md)
 ![Tests](https://github.com/craftvscruft/tfrefactor/actions/workflows/test.yml/badge.svg?branch=main)
 [![License: MPL2](https://img.shields.io/github/license/raymyers/tfrefactor)](https://github.com/craftvscruft/tfrefactor/blob/main/LICENSE)
-[![Twitter: lambdapocalypse](https://img.shields.io/twitter/follow/lambdapocalypse.svg?style=social)](https://twitter.com/lambdapocalypse)
 
 > Automated refactoring for [Terraform](https://terraform.io/.
 
