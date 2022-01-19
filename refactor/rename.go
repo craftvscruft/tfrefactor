@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pmezard/go-difflib/difflib"
 	"github.com/raymyers/hcl/v2"
 	"github.com/raymyers/hcl/v2/hclwrite"
 )
@@ -33,14 +32,7 @@ func Rename(fromAddressString, toAddressString, configPath string) (*UpdatePlan,
 			return nil, err
 		}
 		afterText := string(parsedFile.Bytes())
-		diff := difflib.UnifiedDiff{
-			A:        difflib.SplitLines(beforeText),
-			B:        difflib.SplitLines(afterText),
-			FromFile: "Original",
-			ToFile:   "Current",
-			Context:  3,
-		}
-		diffText, _ := difflib.GetUnifiedDiffString(diff)
+		diffText, err := diffText(beforeText, afterText, 3)
 		if len(diffText) > 0 {
 			fmt.Printf("Diff for %v\n%v\n", filename, diffText)
 			plan.addFileUpdate(&FileUpdate{filename, beforeText, afterText})
@@ -117,10 +109,8 @@ func RenameVariablePrefixInBody(blockType string, body *hclwrite.Body, fromAddre
 func findBlocks(b *hclwrite.Body, address *Address) []*hclwrite.Block {
 	var matched []*hclwrite.Block
 	for _, block := range b.Blocks() {
-		if string(address.BlockType()) == block.Type() {
-			if matchLabels(address.labels, block.Labels()) {
-				matched = append(matched, block)
-			}
+		if string(address.BlockType()) == block.Type() && matchLabels(address.labels, block.Labels()) {
+			matched = append(matched, block)
 		}
 	}
 
