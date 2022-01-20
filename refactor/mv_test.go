@@ -1,6 +1,7 @@
 package refactor
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 	"log"
@@ -177,7 +178,17 @@ func assertFileHasContents(t *testing.T, expectedFile string, actualContents str
 	if err != nil {
 		log.Fatalf("Loading %v - %v", expectedFile, err)
 	}
-	expected := strings.TrimSpace(string(expectedBuf))
-	actual := strings.TrimSpace(actualContents)
+	expected := strings.TrimSpace(string(normalizeNewlines(expectedBuf)))
+	actual := strings.TrimSpace(string(normalizeNewlines([]byte(actualContents))))
 	assert.Equal(t, expected, actual, "File %v", expectedFile)
+}
+
+// NormalizeNewlines normalizes \r\n (windows) and \r (mac)
+// into \n (unix)
+func normalizeNewlines(d []byte) []byte {
+	// replace CR LF \r\n (windows) with LF \n (unix)
+	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
+	// replace CF \r (mac) with LF \n (unix)
+	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
+	return d
 }
