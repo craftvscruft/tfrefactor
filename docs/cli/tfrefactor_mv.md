@@ -1,18 +1,19 @@
-## tfrefactor rename
+## tfrefactor mv
 
-Rename var / data / resource
+Move element to a different file
 
 ### Synopsis
 
-Rename var / data / resource
+Move element to a different file.
+Can be var, data, resource, output, local, or module.
 
 Arguments:
-  FROM_ADDRESS     The old address (e.g. var.a, data.vpc.default, aws_vpc.default).
-  TO_ADDRESS       The new address.
+  ADDRESS     The address (e.g. var.a, data.vpc.default, aws_vpc.default).
+  TO_FILE     File to move to.
 
 
 ```
-tfrefactor rename <FROM_ADDRESS> <TO_ADDRESS> [flags]
+tfrefactor mv <ADDRESS> <TO_FILE> [flags]
 ```
 
 ### Options
@@ -20,7 +21,7 @@ tfrefactor rename <FROM_ADDRESS> <TO_ADDRESS> [flags]
 ```
   -c, --config string   Path of terraform to modify, defaults to current. (default "-")
   -f, --force           Skip interactive approval of update before applying
-  -h, --help            help for rename
+  -h, --help            help for mv
 ```
 
 ### SEE ALSO

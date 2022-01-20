@@ -24,3 +24,7 @@ test: build
 
 .PHONY: check
 check: lint test
+
+.PHONY: doc
+doc: build
+	go run main.go doc
