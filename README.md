@@ -9,6 +9,7 @@
 Currently supports:
 
 * Rename local / var / data / resource across all files in a config
+* Move items or categories of items to new files.
 * Diff preview of changes
 * Adding `moved` blocks for resource renames to avoid `state mv` in Terraform 1.1
 
@@ -27,24 +28,33 @@ make
 cp bin/tfrefactor ~/.local/bin
 ```
 
-## Usage
+### Run without installing
+```sh
+make
+
+./bin/tfrefactor
+```
+
+## Usage Examples
+Display CLI help with full usage information.
+
+```sh
+tfrefactor
+```
 
 Rename a var from `acct_id` to `account_id` in the current directory
 ```
 tfrefactor rename var.acct_id var.account_id
 ```
 
-Display CLI help with usage information.
-
-```sh
-tfrefactor
+Move the var `account_id` to the file `variables.tf`
+```
+tfrefactor mv var.account_id variables.tf
 ```
 
-You can also run without installing
-```sh
-make
-
-./bin/tfrefactor
+Move all data blocks to the file `data.tf`
+```
+tfrefactor mv data data.tf
 ```
 
 ## Run tests
