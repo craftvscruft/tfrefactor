@@ -155,7 +155,7 @@ func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, 
 		if err != nil {
 			log.Fatalf("Loading %v - %v", filePath, err)
 		}
-		filenameToContents[file.Name()] = string(buf)
+		filenameToContents[path.Base(file.Name())] = string(buf)
 	}
 	for _, update := range plan.FileUpdates {
 		filenameToContents[path.Base(update.Filename)] = update.AfterText
