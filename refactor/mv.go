@@ -125,9 +125,18 @@ func labelsEqual(a, b []string) bool {
 	return true
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func moveBlock(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) {
+	addrLabels := addr.labels
 	for _, block := range parsedInFile.Body().Blocks() {
-		if string(addr.BlockType()) == block.Type() && matchLabels(addr.labels, block.Labels()) {
+		blockLabelsLimited := block.Labels()[0:min(len(addrLabels), len(block.Labels()))]
+		if string(addr.BlockType()) == block.Type() && matchLabels(addr.labels, blockLabelsLimited) {
 			fmt.Printf("## Block matched %v %v\n", block.Type(), block.Labels())
 			parsedOutFile.Body().AppendNewline()
 			parsedOutFile.Body().AppendBlock(block)
@@ -139,7 +148,6 @@ func moveBlock(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) {
 }
 
 func moveAddrToFile(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) error {
-
 	if addr.elementType == TypeLocal && len(addr.labels) == 0 {
 		moveLocals(parsedInFile, parsedOutFile)
 	} else if addr.elementType == TypeLocal {
