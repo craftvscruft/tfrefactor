@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/craftvscruft/tfrefactor/refactor"
 	"github.com/spf13/cobra"
@@ -49,8 +49,8 @@ func runMvCmd(cmd *cobra.Command, args []string) error {
 		CheckFatal(err)
 	}
 
-	if !path.IsAbs(toFile) {
-		toFile = path.Join(configPath, toFile)
+	if !filepath.IsAbs(toFile) {
+		toFile = filepath.Join(configPath, toFile)
 	}
 	plan, err := refactor.Mv(fromAddr, toFile, configPath)
 	if err != nil {

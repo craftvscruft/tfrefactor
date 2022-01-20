@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -101,7 +101,6 @@ func TestMv(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			// cmd := newMockCmd()
 			plan, err := Mv(tc.args[0], tc.args[1], tc.from)
 			if (err == nil) != tc.ok {
 
@@ -150,15 +149,15 @@ func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, 
 
 	filenameToContents := make(map[string]string)
 	for _, file := range startingFiles {
-		filePath := path.Join(from, file.Name())
+		filePath := filepath.Join(from, file.Name())
 		buf, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			log.Fatalf("Loading %v - %v", filePath, err)
 		}
-		filenameToContents[path.Base(file.Name())] = string(buf)
+		filenameToContents[filepath.Base(file.Name())] = string(buf)
 	}
 	for _, update := range plan.FileUpdates {
-		filenameToContents[path.Base(update.Filename)] = update.AfterText
+		filenameToContents[filepath.Base(update.Filename)] = update.AfterText
 	}
 
 	if len(expectedFiles) != len(filenameToContents) {
@@ -169,7 +168,7 @@ func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, 
 		t.Fatalf("Expected files to be %v, but found %v", fileNames(expectedFiles), actualFilenames)
 	}
 	for _, file := range expectedFiles {
-		assertFileHasContents(t, to+"/"+file.Name(), filenameToContents[path.Base(file.Name())])
+		assertFileHasContents(t, to+"/"+file.Name(), filenameToContents[filepath.Base(file.Name())])
 	}
 }
 
@@ -181,8 +180,4 @@ func assertFileHasContents(t *testing.T, expectedFile string, actualContents str
 	expected := strings.TrimSpace(string(expectedBuf))
 	actual := strings.TrimSpace(actualContents)
 	assert.Equal(t, expected, actual, "File %v", expectedFile)
-	// if expected != actual {
-	// 	t.Fatalf("got:\n%s\nwant:\n%s", actual, expected)
-	// }
-
 }
