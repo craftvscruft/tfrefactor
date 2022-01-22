@@ -23,11 +23,6 @@ func fileNames(vs []os.FileInfo) []string {
 // assertMockCmd is a high-level test helper to run a given mock command with
 // arguments and check if an error and its stdout are expected.
 func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, plan *UpdatePlan) {
-	// from, err := filepath.Abs(from)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	expectedFiles := []string{}
 	err := filepath.Walk(to,
 		func(path string, info os.FileInfo, err error) error {
@@ -43,10 +38,6 @@ func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, 
 	if err != nil {
 		log.Println(err)
 	}
-	// expectedFiles, err := ioutil.ReadDir(to)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	startingFiles, err := ioutil.ReadDir(from)
 
 	filenameToContents := make(map[string]string)

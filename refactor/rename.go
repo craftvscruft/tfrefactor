@@ -42,13 +42,19 @@ func Rename(fromAddressString, toAddressString, configPath string) (*UpdatePlan,
 	return &plan, nil
 }
 
-func createTraversal(labels []string) (traversal hcl.Traversal) {
+func createTraversal(address *Address) (traversal hcl.Traversal) {
+	labels := address.labels[1:]
+	root := address.labels[0]
+	if address.elementType == TypeModule {
+		root = "module"
+		labels = address.labels
+	}
 	traversal = hcl.Traversal{
 		hcl.TraverseRoot{
-			Name: labels[0],
+			Name: root,
 		},
 	}
-	for _, label := range labels[1:] {
+	for _, label := range labels {
 		traversal = append(traversal, hcl.TraverseAttr{
 			Name: label,
 		})
@@ -81,8 +87,8 @@ func AddMovedBlock(file *hclwrite.File, fromAddress, toAddress *Address) {
 	file.Body().AppendNewline()
 	movedBlock := file.Body().AppendNewBlock("moved", []string{})
 
-	movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
-	movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+	movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress))
+	movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress))
 }
 
 func RenameLocalInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
