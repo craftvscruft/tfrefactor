@@ -14,18 +14,18 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	plan := newUpdatePlan()
 	var parsedOutFile *hclwrite.File
-	if _, err := os.Stat(toFile); errors.Is(err, os.ErrNotExist) {
-		parsedOutFile, err = ParseHclBytes([]byte{}, toFile)
+
+	// Assume toFile is relative to config path. Will this always be true?
+	toFilePath := filepath.Join(configPath, toFile)
+	if _, err := os.Stat(toFilePath); errors.Is(err, os.ErrNotExist) {
+		parsedOutFile, err = ParseHclBytes([]byte{}, toFilePath)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		parsedOutFile, err = ParseHclFile(toFile)
+		parsedOutFile, err = ParseHclFile(toFilePath)
 		if err != nil {
 			return nil, err
 		}
@@ -34,8 +34,7 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	beforeOutText := string(parsedOutFile.Bytes())
 	for _, filename := range filenames {
 		fromPath, _ := filepath.Abs(filename)
-		toPath, _ := filepath.Abs(toFile)
-		if fromPath != "" && fromPath != toPath {
+		if fromPath != "" && fromPath != toFilePath {
 			parsedInFile, err := ParseHclFile(filename)
 			if err != nil {
 				return nil, err
@@ -60,8 +59,8 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	afterOutText := string(parsedOutFile.Bytes())
 	diffText, err := diffText(beforeOutText, afterOutText, 3)
 	if len(diffText) > 0 {
-		fmt.Printf("Diff for %v\n%v\n", toFile, diffText)
-		plan.addFileUpdate(&FileUpdate{toFile, beforeOutText, afterOutText})
+		fmt.Printf("Diff for %v\n%v\n", toFilePath, diffText)
+		plan.addFileUpdate(&FileUpdate{toFilePath, beforeOutText, afterOutText})
 	}
 	return &plan, nil
 }
