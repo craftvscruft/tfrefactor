@@ -3,7 +3,6 @@ package refactor
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -73,10 +72,6 @@ func findOrCreateLocalsBlock(parsedFile *hclwrite.File) *hclwrite.Block {
 		return found
 	}
 	return parsedFile.Body().AppendNewBlock("locals", []string{})
-}
-
-func writeParsedFile(parsedFile *hclwrite.File, toFile string) error {
-	return ioutil.WriteFile(toFile, parsedFile.Bytes(), 0644)
 }
 
 func moveLocals(parsedInFile, parsedOutFile *hclwrite.File) {
