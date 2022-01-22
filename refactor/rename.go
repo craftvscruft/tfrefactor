@@ -68,17 +68,21 @@ func RenameInFile(filename string, file *hclwrite.File, fromAddress, toAddress *
 			block.SetType(string(toAddress.BlockType()))
 			block.SetLabels(toAddress.labels)
 			if fromAddress.elementType == TypeResource && toAddress.elementType == TypeResource {
-				file.Body().AppendNewline()
-				movedBlock := file.Body().AppendNewBlock("moved", []string{})
-
-				movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
-				movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
+				AddMovedBlock(file, fromAddress, toAddress)
 			}
 		}
 	}
 
 	RenameVariablePrefixInBody("", file.Body(), fromAddress, toAddress)
 	return nil
+}
+
+func AddMovedBlock(file *hclwrite.File, fromAddress, toAddress *Address) {
+	file.Body().AppendNewline()
+	movedBlock := file.Body().AppendNewBlock("moved", []string{})
+
+	movedBlock.Body().SetAttributeTraversal("from", createTraversal(fromAddress.labels))
+	movedBlock.Body().SetAttributeTraversal("to", createTraversal(toAddress.labels))
 }
 
 func RenameLocalInFile(filename string, file *hclwrite.File, fromAddress, toAddress *Address) error {
