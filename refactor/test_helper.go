@@ -29,7 +29,7 @@ func assertMockCmdFileOutput(t *testing.T, name string, from string, to string, 
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() {
+			if !info.IsDir() && filepath.Ext(info.Name()) == ".tf" {
 				rel := relativise(to, path)
 				expectedFiles = append(expectedFiles, rel)
 			}

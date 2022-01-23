@@ -70,9 +70,7 @@ func Extract(addresses []string, toFolder, configPath string) (*UpdatePlan, erro
 				fmt.Printf("Diff for %v\n%v\n", filename, diffText)
 				plan.addFileUpdate(&FileUpdate{filename, beforeText, afterText})
 			}
-
 		}
-
 	}
 	afterOutText := string(parsedOutFile.Bytes())
 	diffText, err := diffText(beforeOutText, afterOutText, 3)
