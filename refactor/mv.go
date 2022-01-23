@@ -3,7 +3,6 @@ package refactor
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -15,18 +14,18 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	plan := newUpdatePlan()
 	var parsedOutFile *hclwrite.File
-	if _, err := os.Stat(toFile); errors.Is(err, os.ErrNotExist) {
-		parsedOutFile, err = ParseHclBytes([]byte{}, toFile)
+
+	// Assume toFile is relative to config path. Will this always be true?
+	toFilePath := filepath.Join(configPath, toFile)
+	if _, err := os.Stat(toFilePath); errors.Is(err, os.ErrNotExist) {
+		parsedOutFile, err = ParseHclBytes([]byte{}, toFilePath)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		parsedOutFile, err = ParseHclFile(toFile)
+		parsedOutFile, err = ParseHclFile(toFilePath)
 		if err != nil {
 			return nil, err
 		}
@@ -35,8 +34,7 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	beforeOutText := string(parsedOutFile.Bytes())
 	for _, filename := range filenames {
 		fromPath, _ := filepath.Abs(filename)
-		toPath, _ := filepath.Abs(toFile)
-		if fromPath != "" && fromPath != toPath {
+		if fromPath != "" && fromPath != toFilePath {
 			parsedInFile, err := ParseHclFile(filename)
 			if err != nil {
 				return nil, err
@@ -61,8 +59,8 @@ func Mv(fromAddressString, toFile, configPath string) (*UpdatePlan, error) {
 	afterOutText := string(parsedOutFile.Bytes())
 	diffText, err := diffText(beforeOutText, afterOutText, 3)
 	if len(diffText) > 0 {
-		fmt.Printf("Diff for %v\n%v\n", toFile, diffText)
-		plan.addFileUpdate(&FileUpdate{toFile, beforeOutText, afterOutText})
+		fmt.Printf("Diff for %v\n%v\n", toFilePath, diffText)
+		plan.addFileUpdate(&FileUpdate{toFilePath, beforeOutText, afterOutText})
 	}
 	return &plan, nil
 }
@@ -75,11 +73,7 @@ func findOrCreateLocalsBlock(parsedFile *hclwrite.File) *hclwrite.Block {
 	return parsedFile.Body().AppendNewBlock("locals", []string{})
 }
 
-func writeParsedFile(parsedFile *hclwrite.File, toFile string) error {
-	return ioutil.WriteFile(toFile, parsedFile.Bytes(), 0644)
-}
-
-func moveLocals(parsedInFile, parsedOutFile *hclwrite.File) {
+func moveLocals(parsedInFile, parsedOutFile *hclwrite.File) bool {
 	for _, block := range parsedInFile.Body().Blocks() {
 
 		if block.Type() == "locals" {
@@ -93,12 +87,13 @@ func moveLocals(parsedInFile, parsedOutFile *hclwrite.File) {
 			if !parsedInFile.Body().RemoveBlock(block) {
 				fmt.Printf("WARN locals block could not be removed\n")
 			}
+			return true
 		}
 	}
+	return false
 }
 
-func moveLocal(localName string, parsedInFile, parsedOutFile *hclwrite.File) {
-	fmt.Printf("moveLocal %v\n", localName)
+func moveLocal(localName string, parsedInFile, parsedOutFile *hclwrite.File) bool {
 	for _, block := range parsedInFile.Body().Blocks() {
 
 		if block.Type() == "locals" {
@@ -106,11 +101,15 @@ func moveLocal(localName string, parsedInFile, parsedOutFile *hclwrite.File) {
 			if attr != nil {
 				toLocalsBlock := findOrCreateLocalsBlock(parsedOutFile)
 				toLocalsBlock.Body().AppendUnstructuredTokens(attr.BuildTokens(nil))
+
+				block.Body().RemoveAttribute(localName)
+				// This can leave an empty block. Maybe check for that.
+				return true
 			}
-			block.Body().RemoveAttribute(localName)
-			// This can leave an empty block. Maybe check for that.
+
 		}
 	}
+	return false
 }
 
 func labelsEqual(a, b []string) bool {
@@ -132,30 +131,30 @@ func min(a, b int) int {
 	return b
 }
 
-func moveBlock(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) {
+func moveBlock(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) bool {
+	found := false
 	addrLabels := addr.labels
 	for _, block := range parsedInFile.Body().Blocks() {
 		blockLabelsLimited := block.Labels()[0:min(len(addrLabels), len(block.Labels()))]
 		if string(addr.BlockType()) == block.Type() && matchLabels(addr.labels, blockLabelsLimited) {
-			fmt.Printf("## Block matched %v %v\n", block.Type(), block.Labels())
+			// fmt.Printf("## Block matched %v %v\n", block.Type(), block.Labels())
 			parsedOutFile.Body().AppendNewline()
 			parsedOutFile.Body().AppendBlock(block)
 			if !parsedInFile.Body().RemoveBlock(block) {
 				fmt.Printf("WARN locals block could not be removed\n")
 			}
+			found = true
 		}
 	}
+	return found
 }
 
-func moveAddrToFile(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) error {
+func moveAddrToFile(addr *Address, parsedInFile, parsedOutFile *hclwrite.File) bool {
 	if addr.elementType == TypeLocal && len(addr.labels) == 0 {
-		moveLocals(parsedInFile, parsedOutFile)
+		return moveLocals(parsedInFile, parsedOutFile)
 	} else if addr.elementType == TypeLocal {
 		localName := addr.labels[0]
-		moveLocal(localName, parsedInFile, parsedOutFile)
-	} else {
-		moveBlock(addr, parsedInFile, parsedOutFile)
+		return moveLocal(localName, parsedInFile, parsedOutFile)
 	}
-
-	return nil
+	return moveBlock(addr, parsedInFile, parsedOutFile)
 }
